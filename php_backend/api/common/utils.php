@@ -1,4 +1,15 @@
 <?php
+    // include_once './database.php';
+    // header("Access-Control-Allow-Origin: *");
+    // header("Content-Type: application/json; charset=UTF-8");
+    // header("Access-Control-Allow-Methods: POST");
+    // header("Access-Control-Max-Age: 3600");
+    // header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+    
+    // ini_set('display_errors', '1');
+    // ini_set('display_startup_errors', '1');
+    // error_reporting(E_ALL);
+        
     // asynchronously getting the output lines from the shell script...
 
 class ExecAsync {
@@ -214,4 +225,272 @@ function terminal($command)
         //some problem
     }
 */
+?>
+
+
+
+<?php //   =========== Utility Functions ============
+    function getScriptNamesFromDB($user_id) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+        
+        $query = "SELECT * FROM " . $table_name . " WHERE user_id = '".$user_id."' order by last_time desc";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $num = $stmt->rowCount();
+
+        $scripts = [];
+        if($num > 0){
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                array_push($scripts, $row);
+            }
+        } 
+        return $scripts;
+    }
+
+    function getScriptByIdFromDB($tbl, $id) {
+        $table_name = $tbl;
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+        
+        $query = "SELECT * FROM " . $table_name . " WHERE id = '".$id."' ";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $num = $stmt->rowCount();
+
+        $scripts = [];
+        if($num > 0){
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                array_push($scripts, $row);
+            }
+        }
+        return $scripts;
+    }
+
+    function dbCachedClear($id) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+
+        $query = "DELETE FROM " . $table_name . " WHERE id = '".$id."'";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        
+        return;
+    }
+
+    function saveToDB($id, $user_id, $path, $name) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+
+        if($id == 0){
+            $query = "INSERT INTO ".$table_name." (user_id, script_path, script_name) 
+                    VALUES ('".$user_id."', '".$path."', '".$name."')";
+            $stmt = $conn->prepare($query);
+
+            if($db_status = $stmt->execute()){
+                $id = $conn->lastInsertId();
+                return (array( 
+                    "message"       => "New script added.", 
+                    "type"          => "script_save",
+                    "db_status"     => $db_status,
+                    'db_return'         => $id
+                    )
+                );
+            } else {
+                return (array( 
+                    "message"       => "New script add failed.", 
+                    "type"          => "script_save",
+                    "db_status"     => $db_status,
+                    "db_return"     => $id
+                    )
+                );
+            }
+          
+        } else {
+            $query = "UPDATE " . $table_name . "
+                        SET script_name = '".$name."' WHERE id = '".$id."'";
+
+            $stmt = $conn->prepare($query);
+
+            if($db_status = $stmt->execute()){
+                $id = $conn->lastInsertId();
+                return (array( 
+                    "message"       => "Script Updated.", 
+                    "type"          => "script_save",
+                    "db_status"     => $db_status,
+                    "db_return"     => $id
+                    )
+                );
+            } else {
+                return (array( 
+                    "message"       => "Script Updated.", 
+                    "type"          => "script_save",
+                    "db_status"     => $db_status,
+                    "db_return"     => $id
+                    )
+                );
+            }
+        }
+
+    }
+   
+    function insertScriptToDB($user_id, $path, $name) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+        
+        $query = "INSERT INTO ".$table_name." (user_id, script_path, script_name) 
+                VALUES ('".$user_id."', '".$path."', '".$name."')";
+        $stmt = $conn->prepare($query);
+
+        if($db_status = $stmt->execute()){
+            $id = $conn->lastInsertId();
+            if ($id != 0) {
+                return (array( 
+                    "message"       => "New script added.", 
+                    "type"          => "script_add",
+                    "db_status"     => $db_status,
+                    'db_return'     => $id
+                    )
+                );
+
+            } else {
+                return (array( 
+                    "message"       => "New script add failed", 
+                    "type"          => "script_add",
+                    "db_status"     => $db_status,
+                    'db_return'     => $id
+                    )
+                );
+            }
+        }
+    }
+
+    function updateScriptInDB($id, $name, $time) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+        
+        $query = "UPDATE " . $table_name . "
+                        SET script_name = '".$name."', 
+                            last_time = '".$time."'
+                        WHERE id = '".$id."'";
+
+        $stmt = $conn->prepare($query);
+
+        if($db_status = $stmt->execute()){
+            $id = $conn->lastInsertId();
+            return (array( 
+                "message"       => "Script Updated.", 
+                "type"          => "script_edit",
+                "db_status"     => $db_status,
+                "db_return"     => $id
+                )
+            );
+        } else {
+            return (array( 
+                "message"       => "Script Update failed", 
+                "type"          => "script_edit",
+                "db_status"     => $db_status,
+                'db_return'     => $id
+                )
+            );
+        }
+    }
+
+    function deleteScriptsByNameFromDB($name) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+        
+        $query = "DELETE FROM " . $table_name . "
+                        WHERE script_name = '".$name."'";
+
+        $stmt = $conn->prepare($query);
+
+        if($db_status = $stmt->execute()){
+            $cnt = $stmt->rowCount();
+            return (array( 
+                "message"       => "Script deleted.", 
+                "type"          => "script_delete",
+                "db_status"     => $db_status,
+                "db_return"     => $cnt
+                )
+            );
+        } else {
+            return (array( 
+                "message"       => "Script delete failed", 
+                "type"          => "script_delete",
+                "db_status"     => $db_status,
+                'db_return'     => $cnt
+                )
+            );
+        }
+    }
+
+    function deleteScriptByIdFromDB($id) {
+        $table_name = 'strategies';
+        $databaseService = new DatabaseService();
+        $conn = $databaseService->getConnection();
+        
+        $query = "DELETE FROM " . $table_name . "
+                        WHERE id = '".$id."'";
+
+        $stmt = $conn->prepare($query);
+
+        if($db_status = $stmt->execute()){
+            $cnt = $stmt->rowCount();
+            return (array( 
+                "message"       => "Script deleted.", 
+                "type"          => "script_delete",
+                "db_status"     => $db_status,
+                "db_return"     => $cnt
+                )
+            );
+        } else {
+            return (array( 
+                "message"       => "Script delete failed", 
+                "type"          => "script_delete",
+                "db_status"     => $db_status,
+                'db_return'     => $cnt
+                )
+            );
+        }
+    }
+
+    function addScriptContentToTableData($scriptNames, $path) {
+        $scriptData = [];
+        for ($i = 0; $i < count($scriptNames); $i ++) {
+            if (!file_exists($path.'/'.$scriptNames[$i]['script_name'].'.py')) {
+                dbCachedClear($scriptNames[$i]['id']);
+                continue;
+            }
+            $fileContent = '...';
+            if ($i == 0) {
+                $fileContent = file_get_contents($path.'/'.$scriptNames[$i]['script_name'].'.py');
+            }
+            $scriptInfo = array(
+                'id'            => $scriptNames[$i]['id'], 
+                'script_name'   => $scriptNames[$i]['script_name'], 
+                'last_time'     => $scriptNames[$i]['last_time'],
+                'content'       => $fileContent
+            );
+            array_push($scriptData, $scriptInfo);
+        }
+        
+        $path = '/home/ubuntu/trading/strategies/';
+        $defaultFileContent = file_get_contents($path.'mystrategy.py');
+        $defaultScript = array(
+            'id'            => 0, 
+            'script_name'   => 'Default' , 
+            'content'       => $defaultFileContent,
+            'last_time'     => date('Y-m-d H:i:s')
+        );
+        array_push($scriptData, $defaultScript);
+        
+        return $scriptData;
+    }
 ?>

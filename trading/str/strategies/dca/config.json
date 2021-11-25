@@ -1,0 +1,21 @@
+{
+  "marketplace":"USDT",
+  "tokenlist":[{"token":"SOL","min":150,"max":280},{"token":"ETH","min":3800,"max":4700}],
+  "apiKey":"iALoKUiAKslA8at6xlKkYTfHLrFGsB2TupQVPd1Rzn9HFdcfPOps0yM5iJurhl77",
+  "secret":"nIrwG5etQTlz2RgRhreXXl7oU7PlKT6yi3q0nrxaCst2gheidjPAcWibc5UkISMF",
+  
+  "compression":1,
+
+  "buyamount":20,
+  "tpdca":3,
+  "sldca":10,
+  "continueflag":1,
+  "rsi_level":0,
+  "trstart":1.5,
+  "trstop":0.1,
+  "dca":[[2,100],[4,100],[6,100],[8,100],[10,100],[15,100]],
+  "host": "localhost",
+  "user": "root",
+  "password": "",
+  "database": "trading"
+}

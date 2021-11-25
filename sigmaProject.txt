@@ -1,0 +1,100 @@
+
+sigmaoffice; roman from Russia, now he is in Canada.
+Client: Rox from Australia; 
+figma design:
+https://www.figma.com/proto/dNjUIWGsrMuhUi017yl3Cy/AlgoTrading?node-id=1%3A36&scaling=min-zoom&page-id=1%3A35&starting-point-node-id=1%3A36
+
+landing page:
+http://ec2-13-59-206-110.us-east-2.compute.amazonaws.com/
+
+Documentation:
+https://docs.google.com/document/d/1Zl8gJ65gt51X2c_7V911voNHtuJY6VkuSVC-GYXkAyE/edit
+
+https://github.com/romaoffice/algotrading
+fingerprint== >>> SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8
+
+===========================
+it is chart of tradingview.we need implement as like as this .but simple
+
+https://www.tradingview.com/chart/57ZSrMHF/
+
+It is tradingview chart libraty
+https://www.tradingview.com/HTML5-stock-forex-bitcoin-charting-library/?feature=technical-analysis-charts
+We need use Technical analysis Chart.
+
+thank you
+==========================
+it is api to get download price.
+it is api from angel broker
+https://smartapi.angelbroking.com/docs/Historical
+
+I did attached several example, that made me 
+Grapprice is a sample to get realtime price.
+But it dont neet to get tick price now.
+We need ohlc price chart.
+
+Thx,
+===========================
+
+Hi, please receive documentation for first stage
+I hope get daily update about status with result at 18 for everyday.
+
+please make ui at first.
+and make price scrap and price feeder 
+
+Please confirm receiv.
+I will get confirm from client within tomorrow.
+
+Thank you.
+
+============================
+your task is 1),2),3) of subject.
+
+============================
+We needd use ZERODHA api(zerodha.com) to get price , not ANGEL API.
+So, please reference  strategy_05/t2/index.js that i sent by zip .it is for zerodha.
+
+You can look 
+        const todate = new Date("2021-08-15 00:00:00");
+        const fromdate = new Date("2021-07-25 00:00:00")
+        const ohlc_res = await kc.getHistoricalData(trading_token, interval, fromdate, todate,false,true);
+
+it is part of downloading price 
+
+We need get price by Open,High,Low,Close, Open interest,Volume.
+The zerodha only provide [open interest].
+
+Good luck.
+==============================
+it is login for aws . we have a ec2 instance for current project. 
+The account is for dear rox. so if you take some action need to pay, please confirm with me and rox.
+
+login : saumya2427130164@gmail.com
+password : Sunainailu143.
+
+ec2-18-189-143-46.us-east-2.compute.amazonaws.com
+Please find attachment , that is key file to access ec2 instance.
+
+================================
+Hi, halle.
+
+I hope complete this task before end of tomorrow from you.
+- It can paste script into editor box and save.
+  I did attach sample script.
+  When save it, you need save this file into
+  /home/ubuntu/trading/strategy/first.py
+  The file name can be selected by user .
+  
+- When click backtest button 
+   The backend ui need run saved first.py.
+  and get console messages that show while run python script.
+  get png file "savefig.png" from same folder.
+  and show this text and images to UI.
+
+Please make sure, we need complete till end of tomrrow. it is just simple ui functions.
+
+Thank you. 
+
+
+
+

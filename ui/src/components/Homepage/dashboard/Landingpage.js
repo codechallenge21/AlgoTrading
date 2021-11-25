@@ -1,6 +1,4 @@
 import React, {useState} from 'react';
-import { Link } from "react-router-dom";
-import { Router, Route, Switch, Redirect } from 'react-router-dom';
 import { faqs } from "./faqs.json";
 
 import './landingpage.css';
@@ -13,10 +11,10 @@ import wallet from "../../../assets/img/wallet.svg";
 
 
 function Landingpage(props){
-  const [faq, setFaq] = useState(faqs[0]);
-  
-  const handleSignup = (username, email, password) => {};
-  const handleLogin = (username, password) => {}
+
+//   const [faq, setFaq] = useState(faqs[0]);
+//   const handleSignup = (username, email, password) => {};
+//   const handleLogin = (username, password) => {}
  
    return(
       <div className="landing-page">
@@ -29,7 +27,7 @@ function Landingpage(props){
                </div>
                <div className="user-action-btn col-md-6" style={{'textAlign':'right'}}>
                   <div className="icon-button">
-                     <button onClick={props.openModal}>Register / LogIn</button>
+                     <button onClick={props.openModal}>Sign in / Sign up</button>
                   </div>
                </div>
             </div>

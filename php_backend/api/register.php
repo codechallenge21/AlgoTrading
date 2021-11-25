@@ -27,53 +27,44 @@
     //         header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
     // }
 
-    // $firstName = '';
-    // $lastName = '';
-    // $email = '';
-    // $password = '';
-
     $data = json_decode(file_get_contents("php://input"));
-
-    // var_dump($data->fname);
-    // var_dump($data->lname);
-    // var_dump($data->email);
-    // var_dump($data->password);
 
     $databaseService = new DatabaseService();
     $conn = $databaseService->getConnection();
-    // $conn = $databaseService->createTables();
 
     $firstName = $data->fname;
     $lastName = $data->lname;
     $email = $data->email;
     $password = $data->password;
     $password_hash = password_hash($password, PASSWORD_BCRYPT);
+    $table_name = 'users';
 
-    $table_name = 'Users';
+    if ($firstName == "" || $lastName == "" || $email == "" || $password =="") {
+        return;
+    }
 
-    $query = "INSERT INTO " . $table_name . "
-                    SET first_name = '".$firstName."',
-                        last_name = '".$lastName."',
-                        email = '".$email."',
-                        password = '".$password_hash."'";
-
+    //check exsitance
+    $query = "SELECT * FROM " . $table_name . " WHERE email = '".$email."' LIMIT 0,1";
     $stmt = $conn->prepare($query);
+    $stmt->execute();
+    $num = $stmt->rowCount();
 
-    // $stmt->bindParam(':firstname', $firstName);
-    // $stmt->bindParam(':lastname', $lastName);
-    // $stmt->bindParam(':email', $email);
-
-
-    // $stmt->bindParam(':password', $password_hash);
-
-    // var_dump($query);
-    // var_dump($stmt);
+    if($num > 0){
+        http_response_code(200);
+        echo json_encode(array("message" => "This user registered already.", "success" => 0, "type" => "register"));
+        exit();
+    } else {
+        $query = "INSERT INTO ".$table_name." (first_name, last_name, email, password) 
+                                VALUES ('".$firstName."', '".$lastName."', '".$email."', '".$password_hash."')"
+                                ;
+        $stmt = $conn->prepare($query);
+    }
 
     if($stmt->execute()){
     
         http_response_code(200);
         echo json_encode(array( 
-                                "message" => "User was successfully registered.", 
+                                "message" => "Registered successfully.", 
                                 "success" => 1, 
                                 "type" => "register"
                         )
@@ -81,7 +72,6 @@
     }
     else{
         http_response_code(200);
-    
-        echo json_encode(array("message" => "Unable to register the user.", "success" => 0, "type" => "register"));
+        echo json_encode(array("message" => "Unable to register", "success" => 0, "type" => "register"));
     }
 ?>

@@ -6,8 +6,8 @@ logging.basicConfig(level=logging.DEBUG)
 class KiteWrapper:
     def __init__(self, api_key = "9oj53b15vbkubvuy",
                     api_secret="dt2p6bkvy6molwv5djxceijtpz4ml8zd",
-                    request_token="IVKWI7nmlilxclSTwVXX2zXSPmJHm9il",
-                    access_token="BZEEnb2ePr7rC1F0cIAA6pf5TWoY3Q72"):
+                    request_token="RKU3Miw1k8lj0dlSuVExICPHSPW2Ox2J",
+                    access_token="qA6fDOPJ11mcyvVSGJFkCRBXZY5EN4vc"):
         # https://kite.zerodha.com/connect/login?v=3&api_key=9oj53b15vbkubvuy
         self.kite = KiteConnect(api_key=api_key)
         if access_token=="" or  access_token is None:

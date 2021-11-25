@@ -10,8 +10,6 @@ header("Access-Control-Max-Age: 3600");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 
-// $email = '';
-// $password = '';
 $data = json_decode(file_get_contents("php://input"));
 
 $databaseService = new DatabaseService();
@@ -23,9 +21,9 @@ $password = $data->password;
 
 
 
-$table_name = 'Users';
+$table_name = 'users';
 
-$query = "SELECT id, first_name, last_name, password FROM " . $table_name . " WHERE email = '".$email."' LIMIT 0,1";
+$query = "SELECT * FROM " . $table_name . " WHERE email = '".$email."' LIMIT 0,1";
 
 $stmt = $conn->prepare($query);
 
@@ -67,11 +65,12 @@ if($num > 0){
         http_response_code(200);
         echo json_encode(
             array(
-                "message" => "Successful login.",
+                "message" => "Logged in successfully",
                 "jwt" => $jwt,
                 "type" => "login",
                 "success" => 1,
                 "user" => array (
+                    'id'    => $id,
                     'fname' => $firstname,
                     'lname' => $lastname,
                     'email' => $email
@@ -81,12 +80,12 @@ if($num > 0){
     else{
         
         http_response_code(200);
-        echo json_encode(array("message" => "Login failed.", "password" => $password, "password2" => $password2, "type" => "login", "success" => 0));
+        echo json_encode(array("message" => "Wrong password", "password" => $password, "password2" => $password2, "type" => "login", "success" => 0));
     }
 } 
 else {
     http_response_code(200);
-    echo json_encode(array("message" => "Unregistered User.", "type" => "login", "success" => 0));
+    echo json_encode(array("message" => "Unregistered user", "type" => "login", "success" => 0));
 }
 ?>
 

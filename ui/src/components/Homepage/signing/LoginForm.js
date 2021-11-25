@@ -1,28 +1,72 @@
 
 import React, { useState, useEffect } from "react";
-import { Redirect } from 'react-router-dom';
+import { useSetRecoilState } from 'recoil'
+import { userAuth } from '../../../utils/state'
+
 import {
   Button,
   Modal,
 } from "react-bootstrap";
+import { ToastContainer, toast, Slide} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-import { login, register } from "../../../utils/JWTAuth";
+import { login, register, reset, load_scripts } from "../../../utils/JWTAuth";
 
 function LoginForm (props) {
-  const [showModal, setShowModal] = useState(false);
-  const [smShow, setSmShow] = useState(false);
+ 
+  const setUserAuth = useSetRecoilState(userAuth)
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [cpassword, setCPassword] = useState('');
-  const [mode, setMode] = useState('login');
   const [equalMsg, setEqualMsg] = useState('');
   const [errMsg, setErrMsg] = useState('');
   const [fname, setFname] = useState('');
   const [lname, setLname] = useState('');
+  const [newpassword, setNewpassword] = useState('');
+
+  useEffect(() => {
+    setErrMsg('');
+    setEqualMsg('');
+  }, [props.mode]);
+
+  useEffect(() => {
+    compare_password();
+  }, [cpassword])
+
+  
+  const reset_psw = async () => {
+    if(email === '' || newpassword === '') {
+      setErrMsg("All fields are needed.");
+      return;
+    }
+   
+    let info = {
+      'email': email,
+      'newpassword': newpassword
+    };
+
+    let result = await reset(info);
+
+    if (result.success === 0) {
+      toast.error(result.message, {
+        transition: Slide
+      });
+    } else {
+      toast.success(result.message, {
+        transition: Slide
+      });
+
+      setTimeout(()=>{
+        props.setMode('Signin');
+      }, 1000);
+      
+    }
+  }
 
   const sign_in = async () => {
-    if(email == '' || password == '') {
-      setErrMsg("Please type in all fields");
+    if(email === '' || password === '') {
+      setErrMsg("All fields are needed.");
       return;
     }
    
@@ -32,25 +76,34 @@ function LoginForm (props) {
     };
 
     let result = await login(info);
-    console.log('login result============>>>',result);
-
     
-    if (result.success == 1) {
-      setErrMsg('');
-      setShowModal(false);
-      props.navigate("/build_strategy", { replace: true });
-    //  redirect to the main page.
+    if (result.success && result.success === 1) {
+      toast.success(result.message, {
+        transition: Slide
+      });
+
+      setUserAuth({
+        isAuth: true,
+        user: result.user
+      })
+      
+      setTimeout(()=>{
+        props.navigate("/build_strategy", { replace: true });
+      }, 2000);
+
     } else {
-      setErrMsg("login failed");
+      toast.error(result.message, {
+        transition: Slide
+      });
     }
   }
 
   const sign_up = async () => {
-    if (fname == '' || lname == '' || email == '' || password == '') {
-      setErrMsg("Please Type Every Fields");
+    if (fname === '' || lname === '' || email === '' || password === '') {
+      setErrMsg("All fields are needed.");
       return;
     }
-    if (equalMsg != '' || errMsg != '') {
+    if (equalMsg !== '' || errMsg !== '') {
       return
     }
     let info = {
@@ -60,52 +113,74 @@ function LoginForm (props) {
       'password':   password
     };
 
-    // console.log('signup feed============>>>',info);
 
     let result = await register(info);
     
-    console.log('signup result=========>>>', result);
-    
-    if (result.success == 1) {
-      setErrMsg('Successfully Registered\n. Please Login');
-      setMode('login');
+    if (result.success && result.success === 1) {
+      toast.success(result.message, {
+        transition: Slide
+      });
+
+      setTimeout(()=>{
+        props.setMode('Signin');
+      }, 1000);
       
     } else {
-      setErrMsg("Sign up failed");
+      toast.error(result.message, {
+        transition: Slide
+      });
     }
   }
 
-  useEffect(() => {
-    compare_password();
-  },[cpassword, password])
-
   const compare_password = () => {
-    if (password != cpassword) {setEqualMsg('Need to confirm Password'); }
-    else if (password === cpassword) {setEqualMsg(''); }
+    if (password !== cpassword) { setEqualMsg('Password not matched.'); }
+    else if (password === cpassword) { setEqualMsg(''); }
   }
 
   const renderForgot = () => {
     return(
       <div>
-        <p>inside of forgot! :) </p>
-        <input
-          type="text"
-          name="email"
-          value={email}
-          id="login-email"
-          className="form-control"
-          placeholder="Enter email to reset password"
-          onChange={(e)=>{setEmail(e.target.value)}}
-        />
-        <a
-          href="#"
-          onClick={e => {
-            e.preventDefault();
-            setMode("login");
-          }}
-        >
-          Back to login
-        </a>
+        <form className="form-horizontal form-loanable">
+        {errMsg!==''?
+            <div className="alert alert-danger alert-sm">
+              <button type="button" className="close" data-dismiss="alert" aria-hidden="true"></button>
+              <span className="fw-semi-bold">{errMsg}</span>
+            </div>
+        :null}
+            <div className="login-password-wrapper">
+              <p>Reset your password! :) </p>
+              <input
+                type="text"
+                name="email"
+                value={email}
+                id="login-email"
+                className="form-control"
+                placeholder="Your email"
+                onChange={(e)=>{setEmail(e.target.value)}}
+              /> 
+            </div> <br />
+            <div className="login-password-wrapper">
+              <input
+                type="password"
+                name="newpassword"
+                value={newpassword}
+                id="reg-newpassword"
+                className="form-control"
+                placeholder="New password"
+                required
+                onChange={(e)=>{setNewpassword(e.target.value)}}
+              />
+            </div>
+        </form> <br />
+          <a
+            href="#"
+            onClick={e => {
+              e.preventDefault();
+              props.setMode("Signin");
+            }}
+          >
+            Sign in here
+          </a>
       </div>
     );
   };
@@ -115,9 +190,9 @@ function LoginForm (props) {
       <div>
         <div>
           <form className="form-horizontal form-loanable">
-        {errMsg!=''?
+        {errMsg!==''?
             <div className="alert alert-danger alert-sm">
-              <button type="button" className="close" data-dismiss="alert" aria-hidden="true">×</button>
+              <button type="button" className="close" data-dismiss="alert" aria-hidden="true"></button>
               <span className="fw-semi-bold">{errMsg}</span>
             </div>
         :null}
@@ -181,20 +256,14 @@ function LoginForm (props) {
                       value={password}
                       id="reg-password"
                       className="form-control"
-                      placeholder="********"
+                      placeholder="password"
                       required
                       onChange={(e)=>{setPassword(e.target.value)}}
                     />
                   </div>
                 </div>
               </div>
-        {equalMsg!=''?
-            <div className="alert alert-danger alert-sm">
-              <button type="button" className="close" data-dismiss="alert" aria-hidden="true">×</button>
-              <span className="fw-semi-bold">{equalMsg}</span>
-            </div>
-        :null}
-
+ 
               <div className="form-group has-feedback required">
                 <label htmlFor="reg-cpassword" className="col-sm-5">Confirm Password</label>
                 <div className="">
@@ -206,16 +275,16 @@ function LoginForm (props) {
                       value={cpassword}
                       id="reg-cpassword"
                       className="form-control"
-                      placeholder="********"
+                      placeholder="confirm password"
                       required
                       onChange={(e)=>{setCPassword(e.target.value)}}
                     />
                   </div>
                 </div>
               </div>
-        {equalMsg!=''?
+        {equalMsg!==''?
             <div className="alert alert-danger alert-sm">
-              <button type="button" className="close" data-dismiss="alert" aria-hidden="true">×</button>
+              <button type="button" className="close" data-dismiss="alert" aria-hidden="true"></button>
               <span className="fw-semi-bold">{equalMsg}</span>
             </div>
         :null}
@@ -234,10 +303,10 @@ function LoginForm (props) {
           href="#"
           onClick={e => {
             e.preventDefault();
-            setMode("login");
+            props.setMode("Signin");
           }}
         >
-          Log in here
+          Sign in here
         </a>
       </div>
     );
@@ -247,9 +316,9 @@ function LoginForm (props) {
     return (
       <div>
           <form className="form-horizontal form-loanable">
-          {errMsg!=''?
+          {errMsg!==''?
             <div className="alert alert-danger alert-sm">
-              <button type="button" className="close" data-dismiss="alert" aria-hidden="true">×</button>
+              <button type="button" className="close" data-dismiss="alert" aria-hidden="true"></button>
               <span className="fw-semi-bold">{errMsg}</span>
             </div>
           :null}
@@ -281,19 +350,11 @@ function LoginForm (props) {
                       value={password}
                       id="login-password"
                       className="form-control"
-                      placeholder="********"
+                      placeholder="password"
                       required
                       onChange={(e)=>{setPassword(e.target.value)}}
                     />
-                    <a
-                      href="#"
-                      onClick={e => {
-                        e.preventDefault();
-                        setMode("forgot");
-                      }}
-                    >
-                      Forgot Password
-                     </a>
+                    
                   </div>
                 </div>
               </div>
@@ -304,11 +365,20 @@ function LoginForm (props) {
                 className="btn btn-lg btn-primary btn-left">Enter <span className="icon-arrow-right2 outlined"></span></button>
             </div> */}
           </form>
+          <a
+            href="#"
+            onClick={e => {
+              e.preventDefault();
+              props.setMode("forgot");
+            }}
+          >
+            Forgot Password
+            </a> <br/>
        <a
           href="#"
           onClick={e => {
             e.preventDefault();
-            setMode("register");
+            props.setMode("Register");
           }}
         >
         Create your account
@@ -322,20 +392,22 @@ function LoginForm (props) {
         <Modal
           show={props.showModal}
           onHide={props.onClose}
-          onSubmit={mode==='login'?sign_in:sign_up}
+          onSubmit={props.mode === 'Signin'?sign_in:props.mode === "Register"?sign_up:reset_psw}
           // bsSize="large"
         >
           <Modal.Header>
-            <h2 style={{'textAlign':'center'}}>{ mode === "login" ? "Login" : mode === "register" ? "Register" : "Forgot Password" }</h2>
+            <h2 style={{'textAlign':'center', 'color':'#4e4e4e'}}>{ props.mode === "Signin" ? "Sign In" : props.mode === "Register" ? "Sign Up" : "Forgot Password" }</h2>
           </Modal.Header>
           <Modal.Body>
-            {mode === "login" ? (renderLogin()) : mode === "register" ? (renderRegister()) : (renderForgot())}
+            {props.mode === "Signin" ? (renderLogin()) : props.mode === "Register" ? (renderRegister()) : (renderForgot())}
           </Modal.Body>
           <Modal.Footer>
-            <Button className="btn btn-primary" onClick={mode=='login'?sign_in:sign_up}>Enter</Button>
+            <Button className="btn btn-primary" onClick={props.mode==='Signin'?sign_in:props.mode === "Register"?sign_up:reset_psw}>{props.mode === "Signin" ? "Sign In" : props.mode === "Register" ? "Sign Up" : "Reset"}</Button>
             <Button className="btn btn-secondary"onClick={props.onClose}>Close</Button>
           </Modal.Footer>
+
         </Modal>
+        <ToastContainer position="top-center" autoClose={2000} />
       </div>
     );
 }

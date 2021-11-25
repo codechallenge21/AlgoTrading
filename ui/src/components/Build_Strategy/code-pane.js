@@ -1,212 +1,237 @@
 import React, { useEffect, useRef, useState} from "react";
+import { useRecoilState } from 'recoil';
+import { userAuth } from '../../utils/state';
 
 import "../../index.css";
 
 import Editor from "@monaco-editor/react";
 import Modal from "react-modal";
 import {save_file, run_script, stop_script} from "../../utils/apis";
+import { logout, load_scripts, get_script_content } from '../../utils/JWTAuth';
 
-const fileUrl = '../../../py_scripts/strategy_roman.py';
-const defaultFileContent = `
-import backtrader
-from datetime import datetime
-from basestrategy  import baseStrategy
+import { ToastContainer, toast, Slide} from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { findDOMNode } from "react-dom";
 
-tradingsymbol = 'NIFTY21DEC18000CE'
-timeframe = backtrader.TimeFrame.Minutes
-timeframeCompression  = 5
-fromdate = datetime(2021, 11,3, 0, 0)
-todate = datetime(2021, 11, 12, 0, 0)
-
-
-from datetime import datetime
-
-class WorkingZone(backtrader.Indicator):
-    plotinfo = dict(subplot=False)
-    alias = ('WZONE', 'WorkingZone',)
-    lines = ('wzone','ct')
-
-    def __init__(self):
-        super(WorkingZone, self).__init__()
-    def next(self):
-        
-        if self.data.datetime.date(0) != self.data.datetime.date(-1):
-            self.ct[0] =1
-        else:
-            self.ct[0] =self.ct[-1]+1
-        if(self.ct[0]>3 and self.ct[0]<70):
-            self.lines[0][0] = 1
-        else:
-            self.lines[0][0] = 0
-
-class VolumeWeightedAveragePrice(backtrader.Indicator):
-    plotinfo = dict(subplot=False)
-    alias = ('VWAP', 'VolumeWeightedAveragePrice',)
-    lines = ('vwap','cumvol','typprice','ct')
-    plotlines = dict(VWAP=dict(alpha=0.50, linestyle='-.', linewidth=2.0))
-
-    def __init__(self):
-        super(VolumeWeightedAveragePrice, self).__init__()
-    def next(self):
-        
-        if self.data.datetime.date(0) != self.data.datetime.date(-1):
-            self.typprice[0]=((self.data.close[0] + self.data.high[0] + self.data.low[0])/3) * self.data.volume[0]
-            self.cumvol[0] = self.data.volume[0]
-            self.ct[0] =1
-        else:
-            self.typprice[0]=self.typprice[-1]+((self.data.close[0] + self.data.high[0] + self.data.low[0])/3) * self.data.volume[0]
-            self.cumvol[0] = self.cumvol[-1]+self.data.volume[0]
-            self.ct[0] =self.ct[-1]+1
-        if  self.cumvol[0]>0:
-            self.lines[0][0] = self.typprice[0]/self.cumvol[0]
-        else: 
-            self.lines[0][0] = 0
-
-
-class Strategy(baseStrategy):
-    
-    params = dict(
-        pRsi = 14,
-        pRsiLevel = 60,
-        pSma = 20,
-        stop_loss=10,
-        pRr =3,
-        pSmaSL=10,
-        multiple = 2,
-        volumerate=1.5,
-        initsize = 1,
-        backtest = True
-    )
-    def __init__(self):
-        self.countloss = 0
-        self.rsi = backtrader.indicators.RelativeStrengthIndex(period=self.p.pRsi)
-        self.sma20Oi = backtrader.ind.SMA(self.datas[0].oi,period=self.p.pSma, plot=True,subplot=True)
-        self.sma20Volume= backtrader.ind.SMA(self.datas[0].volume,period=self.p.pSma, plot=False)
-        self.vwap =  VolumeWeightedAveragePrice()
-        self.wzone = WorkingZone()
-        self.openi = self.datas[0].oi
-        self.smalow = backtrader.ind.SMA(self.datas[0].low,period=self.p.pSmaSL, plot=True)
-        self.backtest = self.p.backtest
-        self.bought = False
-        self.order = None
-        super(Strategy, self).__init__()
-    
-    def notify_order(self, order):
-        if order.status in [order.Completed]:
-            if order.isbuy()==False: # Long
-                self.bought = False
-        super(Strategy, self).notify_order(order)
-
-    def next(self):
-        if self.live_data:
-            cash, value = self.broker.get_balance()
-        else:
-            cash = 'NA'
-        for data in self.datas:
-            if(self.backtest==False):
-                self.log('{} - {} | Cash {} | O: {} H: {} L: {} C: {} V:{}  OI:{} SMAVOLUME:{} SMALOW:{} RSI:{} VWAP:{} SMAOI:{}'.format( \
-                    data.datetime.datetime(),data._name, cash, \
-                    data.open[0], data.high[0], data.low[0], data.close[0], data.volume[0],data.oi[0], \
-                    self.sma20Volume[0],self.smalow[0],self.rsi[0],self.vwap[0],self.sma20Oi[0]))
-        self.buysignal  = self.wzone[0]>0 and self.vwap[0]>0 and self.rsi[0]>self.p.pRsiLevel \
-            and self.datas[0].close[0]>self.vwap[0] \
-            and self.sma20Oi[0] > self.datas[0].oi[0] \
-            and self.datas[0].volume[0]>self.sma20Volume[0] * self.p.volumerate
-        if (self.live_data or self.backtest) and not self.bought:
-            if self.buysignal:  # if fast crosses slow to the upside
-                lotsize = self.p.initsize*pow(self.p.multiple,self.countloss)
-                self.order = self.buy(size=lotsize)  # enter long
-                self.bought = True
-        if self.bought :
-            if(self.datas[0].close[0]<self.smalow[0]):
-                lotsize = self.p.initsize*pow(self.p.multiple,self.countloss)
-                self.sell_order = self.sell(size=lotsize)  # enter short
-
-`;
 
 Modal.setAppElement('#root');
 
 function CodePane(props) {
   
+  const [auth, setUserAuth] = useRecoilState(userAuth); // rocoil read&writable function with atom variable ...
+  
   const [defaultCode, setDefaultCode] = useState('');
+  // const [scripts, setScripts] = useState([]);
   const editorRef = useRef(null);
-  const [filename, setFilename] = useState('mystrategy');
+  
   const [runningTimer, setRunningTimer] = useState(0);
   const [timer, setTimer] = useState(0);
-  // const [isOpen, setIsOpen] = useState(false);
+
+  const [modalTitle, setModalTitle] = useState('Save Script');
+  const [confirm_modal, setConfirmModal] = useState(false);
   
   useEffect(() => {
     if (timer > 0) {
       setTimeout(() => setRunningTimer(runningTimer + 1), 1000);
     } else {
       setRunningTimer(0)
-    } 
+    }
   });
 
+
+  const findHintname = (names) => {
+    let hintNum = 1;
+    let isOk = false;
+    console.log(isOk);
+    while(!isOk) {
+      var h_name = 'My Script '+hintNum;
+      if (names.includes(h_name)) {
+        hintNum ++;
+      } else {
+        props.setHintname(h_name);
+        isOk = true;
+      }
+    }
+  }
+
   useEffect(() => {
-    setDefaultCode(defaultFileContent);
-  })
-  
-  const handleFileChosen = async (file) => {
-    return new Promise((resolve, reject) => {
-      let fileReader = new FileReader();
-      fileReader.onload = () => {
-        resolve(fileReader.result);
-      };
-      fileReader.onerror = reject;
-      fileReader.readAsText(file);
-    });
+    if (props.filenames.length !== 0) {
+      findHintname(props.filenames)
+      console.log(props.hintname);
+    }
+  }, [props.filenames])
+
+  useEffect(() => {
+    if (props.scripts.length !== 0 && editorRef.current !== null) {
+      // setDefaultCode(props.scripts[0].content);
+      editorRef.current.setValue(props.scripts[0].content);
+    }
+  },[editorRef.current]);
+
+  // useEffect(() => {
+  //   async function fetchData() {
+  //     if (editorRef.current !== null) {
+  //       const response = await load_scripts({userID:auth.user.id});
+  //       if (response.length !== 0) {
+  //         setScripts(response);
+  //         setDefaultCode(response[0].content);
+  //         editorRef.current.setValue(response[0].content);
+  //       }
+  //     }
+  //   }
+  //   fetchData();
+  //   console.log(editorRef.current);
+  // }, []); // Or [] if effect doesn't need props or state
+
+  const getFileContent = async (file_id, file_name) => {
+    let data = {
+      user_id: auth.user.id,
+      file_id: file_id,
+      file_name: file_name
+    }
+    props.setLoading(true);
+    let result = await get_script_content(data);
+    console.log(result);
+    // setDefaultCode(content);
+    if (result.success == '1') {
+      
+      setDefaultCode(result.content);
+      props.setFileid(file_id);
+      props.setShownName(file_name);
+      props.setFilename(file_name);
+      props.setOriginFileName(file_name);
+      editorRef.current.setValue(result.content);
+
+      props.setLoading(false);
+
+    } else {
+      props.setLoading(false);
+      toast.info(result.message, {
+        transition: Slide
+      });
+
+    }
   }
 
-  const readAllFiles = async (AllFiles) => {
-    const results = await Promise.all(AllFiles.map(async (file) => {
-      const fileContents = await handleFileChosen(file);
-      return fileContents;
-    }));
-    console.log(results);
-    return results;
-  }
+  // const getDefaultScript = () => {
+  //   new_script();
+  // }
 
+  const handleEditorDidMount = (editor, monaco) => {
+    editorRef.current = editor; 
+  }
+ 
   const startTest = async () => {
     setTimer(setInterval(setRunningTimer(runningTimer+1), 1000));
   };
   
-  function toggleModal() {
+  const toggleModal = () => {
+    props.setFilename(props.shownName);
     props.setOpenModal(!props.openModal);
   }
 
-  function handleEditorDidMount(editor, monaco) {
-    editorRef.current = editor; 
-  }
-  
-  function open_modal() {
+  const open_modal = () => {
+    console.log('Hint Name::: ', props.hintname)
     props.setOpenModal(true);
   }
 
-  const saveFile = async () => {
+  const rename_modal = () => {
+    if (props.shownName === 'unsaved') {
+      setModalTitle('Save Script');
+      props.setFilename(props.hintname)
+    } else {
+      setModalTitle('Rename Script');
+      props.setFilename(props.shownName)
+    }
+    open_modal();
+  }
 
-    if (filename == '') {
-      alert('Filename must be entered!');
-      return
+  const save_modal = () => {
+    setModalTitle('Save Script');
+    if (props.shownName === 'unsaved') {
+      props.setFilename(props.hintname)
+    }
+    open_modal();
+  }
+
+  const checkFileName = () => {
+    console.log("File already Exists??? ", props.filenames.includes(props.filename))
+
+    if (
+          ((props.shownName === 'unsaved') && props.filenames.includes(props.filename))
+       || ((props.originFileName !== props.filename) && props.filenames.includes(props.filename))
+          
+      ) {
+      setConfirmModal(true);
+    } else {
+      if(props.shownName === 'unsaved') {saveFile('add');}
+      else if(props.originFileName === props.filename) {saveFile('edit');}
+      else {saveFile('edit_rename');}
+    }
+  }
+
+  const toggle = () => {
+    setConfirmModal(!confirm_modal)
+  }
+
+  const go_saveFile = async () => {
+    if (props.fileid == 0) {
+      saveFile('add_replace');
+    } else {
+      saveFile('edit_replace');
+    }
+  }
+
+  const saveFile = async (type) => {
+    
+    var names = props.filename.split('.py');
+    let data = {
+      user_id:      auth.user.id,
+      type:         type,
+      content:      editorRef.current.getValue(),
+      file_id:      props.fileid,
+      file_name:    names[0],
+      origin_name:  props.originFileName
     }
     
-    var names = filename.split('.py');
-    var data = {
-      content: editorRef.current.getValue(),
-      file: names[0]
+    if (data.file_id === '' || data.user_id === '' || data.file_name ==='' || data.content === '') {
+      toast.info('You are missing params to save script ', {
+        transition: Slide
+      });
+      return;
     }
-    
-    props.setShownName(names[0]+'.py')
+
+    props.setShownName(names[0])
+    if (confirm_modal) {toggle()}
     if (props.openModal) { toggleModal() }
 
     props.setLoading(true);
     document.querySelector('#btn-code-save').innerHTML = 'Saving...';
     document.querySelector('#btn-code-save').setAttribute("disabled", "disabled");
     document.querySelector('#btn-code-test').setAttribute("disabled", "disabled");
+    console.log(data);
+    var result = await save_file(data);
+    console.log(result);
     
-    var fileName = await save_file(data);
-    console.log(fileName);
+    if (type === 'add') {
+
+    } else if (type === 'edit') {
+
+    } else if (type === 'edit_rename') {
+      
+    } else if (type === 'edit_replace') {
+
+    }
     
+    if (result.scriptsData.length !== 0)
+    {
+      // props.setShownName(data.file_name);
+      props.setScripts(result.scriptsData);
+    }
+    // if (result.db_return != 0) {
+    //   props.setFileid(result.db_return);
+    // }          
+              
     document.querySelector('#btn-code-save').removeAttribute("disabled");
     document.querySelector('#btn-code-test').removeAttribute("disabled");
     document.querySelector('#btn-code-save').innerHTML = 'Save';
@@ -218,12 +243,13 @@ function CodePane(props) {
     props.setLogs('');
     props.setCreatedImg64('');
 
-    // await saveFile();
+    await saveFile('edit');
     
-    var names = filename.split('.py');
+    var names = props.filename.split('.py');
     var data = {
-      content: editorRef.current.getValue(),
+      user_id: auth.user.id,
       file: names[0],
+      content: editorRef.current.getValue(),
       type: 'start_test'
     }
     
@@ -234,7 +260,6 @@ function CodePane(props) {
     startTest();
     
     var result = await run_script(data);
-    console.log(result);
 
     document.querySelector('#btn-code-save').removeAttribute("disabled");
     document.querySelector('#btn-code-test').style.display = 'block';
@@ -252,23 +277,28 @@ function CodePane(props) {
     props.setLogs('');
     props.setCreatedImg64('');
 
-    var names = filename.split('.py');
+    var names = props.filename.split('.py');
     var data = {
       content: editorRef.current.getValue(),
       file: names[0],
       type: 'stop_test'
     }
-    
     stop_script(data);
-    
-    // document.querySelector('#btn-code-test').style.display = 'block';
-    // document.querySelector('#btn-code-stop').style.display = 'none';
-    // props.setLoading(false);
-
-    // setTimer(0);
-    // setRunningTimer(0);
   }
 
+  const new_script = () => {
+    props.setFileid(0);
+    props.setShownName('unsaved');
+    props.setOriginFileName('');
+    props.setFilename('')
+    setDefaultCode(props.scripts[props.scripts.length - 1].content);
+    editorRef.current.setValue(props.scripts[props.scripts.length - 1].content);
+  }
+
+  const open_script = () => {
+    console.log(props.scripts);
+  }
+  
   return (
    <>
       <Modal
@@ -280,11 +310,58 @@ function CodePane(props) {
         overlayClassName="myoverlay"
         closeTimeoutMS={500}
       >
-        <div className="mb-1" name="modal-title">Enter File Name.</div>
-        <input type="text" name="filename" value={filename} onChange={(e) => setFilename(e.target.value)} className="w-100 mb-3"/>
-        <button onClick={toggleModal} className="btn btn-dark mb-1 float-right">Cancel</button>
-        <button onClick={saveFile} className="btn btn-info mb-1 mr-2 float-right">Save</button>
+          <h2 style={{'textAlign':'left', 'color':'#4e4e4e'}}>{modalTitle}</h2>
+          <div className="mb-1" name="modal-title">Script Name</div>
+          <input type="text" name="filename" value={props.filename} onChange={(e) => props.setFilename(e.target.value)} className="w-100 mb-3"/>
+          <button onClick={checkFileName} className="btn btn-info mb-1 float-right">Save</button>
+          <button onClick={toggleModal} className="btn btn-dark mb-1 mr-2 float-right">Cancel</button>
       </Modal>
+
+      <Modal
+        isOpen={confirm_modal}
+        onRequestClose={toggle}
+        contentLabel="My dialog"
+        className="mymodal"
+        // style={customStyles}
+        overlayClassName="myoverlay"
+        closeTimeoutMS={500}
+      >
+          <h2 style={{'textAlign':'left', 'color':'#4e4e4e'}}>Confirm</h2>
+          <div className="mb-1" name="modal-title">Script "{props.filename}" already exists. Do you really want to replace it?</div>
+          <button onClick={go_saveFile} className="btn btn-info mb-1 float-right">Yes</button>
+          <button onClick={toggle} className="btn btn-dark mb-1 mr-2 float-right">No</button>
+      </Modal>
+
+      <span className="btn btn-sm btn-light mb-1 p-0 ml-0 script_name_span ml-4" onClick={()=>{rename_modal()}}><b><i><span name="shownName" id="shown-name"> {props.shownName}</span></i></b> &nbsp;<i className="bi bi-pencil"></i></span>&nbsp;
+      <span className="btn btn-sm btn-light mb-1 p-0 ml-0 script_btn_span ml-3" onClick={()=>{new_script()}}><span name="newscript" id="new-script"> New</span> &nbsp;<i className="bi bi-file-earmark-plus"></i></span>&nbsp;
+      <div className="btn-group dropright">
+        <span className="btn btn-sm btn-light mb-1 p-0 ml-0 script_btn_span" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={()=>{open_script()}}><span name="openscript" id="open-script"> Open</span> &nbsp;<i className="bi bi-folder2-open"></i></span>&nbsp;
+        <div className="dropdown-menu">
+          <a className="dropdown-item disabled" tabIndex="-1" aria-disabled="true">Recent used...</a>
+          {
+            props.scripts.map((sr,key) => {
+              if (props.scripts.length > 1 && key+1 < props.scripts.length) {
+                return <a className="dropdown-item" href="#" key={key} onClick={()=>getFileContent(sr.id, sr.script_name)}>{sr.script_name==='mystrategy'?'Default':sr.script_name}</a>
+              } else {
+                // return <><div className="dropdown-divider" key = {key}></div><a className="dropdown-item" href="#" key={key} onClick={()=>getDefaultScript(key)}>Default</a></>
+              }
+            })
+          }
+          {/* <div className="recent-used-scripts"></div> */}
+          <div className="dropdown-divider"></div>
+          <a className="dropdown-item" href="#" onClick={()=>new_script()}>Default</a>
+          {/* <a className="dropdown-item" href="#">My Scripts...</a> */}
+        </div>
+      </div>
+      
+      <button className="btn btn-sm btn-danger mb-1 float-right" id="btn-code-test" onClick={props.shownName==='unsaved'?()=>{save_modal()}:()=>{testValue()}}>
+        <i className="bi bi-play-circle" style={{"color":"#ffffff"}}></i> BackTest 
+      </button>
+      <button className="btn btn-sm btn-danger mb-1 float-right" id="btn-code-stop" onClick={()=>{stopTest()}}>
+        <i className="bi bi-play-stop" style={{"color":"#36D7B7"}}></i> Testing... {runningTimer}s
+      </button>
+      <button role="button" className="btn btn-sm btn-info mb-1 mr-2 float-right" id="btn-code-save" onClick={props.shownName==='unsaved'?()=>{save_modal()}:()=>{saveFile('edit')}}>Save</button>
+      
      <Editor
        height="40vh"
        defaultLanguage="python"
@@ -292,14 +369,8 @@ function CodePane(props) {
        onMount={handleEditorDidMount}
        theme= 'vs-dark'
      />
-     <button className="btn btn-sm btn-danger mt-1 float-right" id="btn-code-test" onClick={filename==''?open_modal:testValue}>
-       <i className="bi bi-play-fill" style={{"color":"#ffffff"}}></i> BackTest 
-     </button>
-     <button className="btn btn-sm btn-danger mt-1 float-right" id="btn-code-stop" onClick={stopTest}>
-       <i className="bi bi-stop-fill" style={{"color":"#36D7B7"}}></i> Testing... {runningTimer}s
-     </button>
-     <button href="#" role="button" className="btn btn-sm btn-info mt-1 mr-2 float-right" id="btn-code-save" onClick={filename==''?open_modal:saveFile}>Save</button>
-      
+
+    <ToastContainer position="top-center" autoClose={4000} />
    </>
   );
 }

@@ -26,6 +26,10 @@ export default function saveFileModal(props) {
         closeTimeoutMS={500}
       >
         <div>My modal dialog.</div>
+          <div className="alert alert-danger alert-sm">
+            <button type="button" className="close" data-dismiss="alert" aria-hidden="true"></button>
+            <span className="fw-semi-bold">{errMsg}</span>
+          </div>
         <button onClick={toggleModal}>Close modal</button>
       </Modal>
     </div>

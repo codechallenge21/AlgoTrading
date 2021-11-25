@@ -20,7 +20,7 @@ class CreateNewAccount extends Component {
         <div>
           <form className="form-horizontal form-loanable">
             <div className="alert alert-danger alert-sm">
-              <button type="button" className="close" data-dismiss="alert" aria-hidden="true">×</button>
+              <button type="button" className="close" data-dismiss="alert" aria-hidden="true"></button>
               <span className="fw-semi-bold">Error:</span> Login failed.
               </div>
             <fieldset>
@@ -49,7 +49,7 @@ class CreateNewAccount extends Component {
                       name="password"
                       id="login-password"
                       className="form-control"
-                      placeholder="*****"
+                      placeholder="password"
                       required
                       onChange={this.onChange}
                     />

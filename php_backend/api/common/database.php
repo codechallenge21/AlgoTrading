@@ -31,15 +31,23 @@ class DatabaseService {
 
         // SQL statement for creating new tables
         $sqlStatements = [
-            'CREATE TABLE Users( 
+            'CREATE TABLE users( 
                 id              INT(11) UNSIGNED AUTO_INCREMENT,
                 first_name      VARCHAR(100) NOT NULL, 
                 last_name       VARCHAR(100) NOT NULL,
                 email           VARCHAR(100) NOT NULL,
                 password        VARCHAR(255) NOT NULL,
-                reg_date        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                reg_date        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
                 PRIMARY KEY(id)
-            );'
+                );',
+            'CREATE TABLE strategies(
+                id           INT(11) UNSIGNED AUTO_INCREMENT,
+                user_id      INT(11) NOT NULL,
+                script_path  VARCHAR(255) NOT NULL,
+                script_name  VARCHAR(255) NOT NULL,
+                last_time    TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
+                PRIMARY KEY(id)
+                );'
         ];
 
         // execute SQL statements

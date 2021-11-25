@@ -1,38 +1,157 @@
-import React, {createElement, useState} from 'react';
-// import logo from './logo.svg';
-import Portfolio from '../Portfolio'
+import React, { useState, useEffect } from 'react';
+import { useRecoilState } from 'recoil';
+import { userAuth } from '../../utils/state';
+import { useNavigate } from 'react-router-dom';
+
 import CodePane from './code-pane';
 import {FadeLoader} from "react-spinners";
-// import './App.css';
 
-function Build_strategy() {
+import graph_logo from "../../assets/img/market trickks-01.svg";
+import { logout, load_scripts } from '../../utils/JWTAuth';
+
+function Build_strategy(props) {
+  
+  let navigate = useNavigate();
+  
+  const [auth, setUserAuth] = useRecoilState(userAuth); // rocoil read&writable function with atom variable ...
+
   let [loading, setLoading] = useState(false);
   let [color, setColor] = useState("#36D7B7");
 
   const [logs, setLogs] = useState('');
   const [createdImg64, setCreatedImg64] = useState('');
   const [shownName, setShownName] = useState('unsaved');
+  const [filename, setFilename] = useState('My Script');
+  const [filenames, setFilenames] = useState([]);
+  const [hintname, setHintname] = useState('My Script 1');
+  const [fileid, setFileid] = useState(0);
   const [openModal, setOpenModal] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [scripts, setScripts] = useState([]);
+  const [originFileName, setOriginFileName] = useState('')
 
-  const showEditPencil = (filename) => {
-    setShownName(filename);
+  useEffect(()=>{
+    if (auth.isAuth === false) {
+      setUserName('');
+      navigate('/', {replace: true});
+
+    } else {
+      setUserName(auth.user.fname + ' ' + auth.user.lname);
+    }
+  });
+
+  useEffect(() => {
+    async function fetchData() {
+      const response = await load_scripts({userID:auth.user.id});
+      setScripts(response);
+    }
+    fetchData();
+  }, [auth]); // Or [] if effect doesn't need props or state
+
+
+
+  useEffect(() => {
+    if (scripts.length !== 0) {
+      setFileid(scripts[0].id);
+      if (scripts[0].id !== 0 && scripts[0].script_name != "Default") {
+        setShownName(scripts[0].script_name);
+        setFilename(scripts[0].script_name);
+        setOriginFileName(scripts[0].script_name);
+        setFileid(scripts[0].id);
+      } else {
+        setShownName('unsaved');
+        setFilename('');
+        setOriginFileName('');
+        setFileid(0);
+      }
+  
+      let names = [];
+      scripts.forEach(script => {
+        names.push(script.script_name);
+      });
+      setFilenames(names)
+    }
+  }, [scripts])
+  
+  const findHintName = (names) => {
+    // let hintNum = 1;
+    // let isOk = false;
+    
+    // while (isOk){
+    //   // for (let i = 0; i < names.length; i ++) {
+    //   //   if ('My Script '+hintNum == names[i]) {
+    //   //     isOk = false; 
+    //   //     break;
+    //   //   } else {
+    //   //     continue;
+    //   //   }
+    //   // }
+    //   // if (isOk == true) {
+    //   //   setHintname('My Script '+hintNum)
+    //   //   onSearch = false;
+    //   //   // break;
+    //   // } else {
+    //   //   hintNum ++;
+    //   // }
+
+
+    //   let h_name = 'My Script '+hintNum;
+    //   if (!names.includes(h_name)) {
+    //     hintNum ++;
+    //   } else {
+    //     setHintname('My Script '+hintNum);
+    //     isOk = true;
+    //   }
+    // }
   }
 
-  const setResultOfBackTest = (resultData) => {
+  const logging_out = () => {
+    logout();
+    setUserAuth({
+      isAuth: false,
+      user: null
+    })
+    navigate('/', {replace: true});
+  };
 
-    setLogs(resultData["output"]);
-    if (resultData['is_chart']) {
-      setCreatedImg64(resultData["imgdata"]);
-      document.querySelector('ul > li > a#console-tab').setAttribute('class', 'nav-link');
-      document.querySelector('ul > li > a#chart-tab').setAttribute('class', 'nav-link active');
-      document.querySelector('div#console').setAttribute('class', 'tab-pane fade');
-      document.querySelector('div#chart').setAttribute('class', 'tab-pane fade show active');
-    } else {
-      setLogs(resultData['output']);
-      document.querySelector('ul > li > a#chart-tab').setAttribute('class', 'nav-link');
+  const setResultOfBackTest = (resultData) => {
+    
+    if(resultData['success'] === 1) {
+      setLogs(resultData['outputWithErrors']);
+      document.querySelector('textarea#logs').style.color = "#9e4747";
+      
       document.querySelector('ul > li > a#console-tab').setAttribute('class', 'nav-link active');
-      document.querySelector('div#chart').setAttribute('class', 'tab-pane fade');
-      document.querySelector('div#console').setAttribute('class', 'tab-pane fade show active');
+      document.querySelector('ul > li > a#console-tab').setAttribute('aria-selected', 'true');
+      document.querySelector('ul > li > a#chart-tab').setAttribute('class', 'nav-link');
+      document.querySelector('ul > li > a#chart-tab').setAttribute('aria-selected', 'true');
+      
+      document.querySelector('.tab-content div#console').setAttribute('class', 'tab-pane fade show active');
+      document.querySelector('.tab-content div#chart').setAttribute('class', 'tab-pane fade');
+      
+    } else if (resultData['is_chart'] === true) {
+      setLogs(resultData['outputWithErrors']);
+      document.querySelector('textarea#logs').style.color = "#47779e";
+      
+      setCreatedImg64(resultData["imgdata"]);
+      document.querySelector('ul > li > a#chart-tab').setAttribute('class', 'nav-link active');
+      document.querySelector('ul > li > a#chart-tab').setAttribute('aria-selected', 'true');
+      document.querySelector('ul > li > a#console-tab').setAttribute('class', 'nav-link');
+      document.querySelector('ul > li > a#console-tab').setAttribute('aria-selected', 'false');
+      
+      document.querySelector('.tab-content div#chart').setAttribute('class', 'tab-pane fade show active');
+      document.querySelector('.tab-content div#console').setAttribute('class', 'tab-pane fade');
+      
+    } else {
+      setLogs(resultData['outputWithErrors']);
+      document.querySelector('textarea#logs').style.color = "#47779e";
+      
+      document.querySelector('ul > li > a#console-tab').setAttribute('class', 'nav-link active');
+      document.querySelector('ul > li > a#console-tab').setAttribute('aria-selected', 'true');
+      document.querySelector('ul > li > a#chart-tab').setAttribute('class', 'nav-link');
+      document.querySelector('ul > li > a#chart-tab').setAttribute('aria-selected', 'true');
+      
+      document.querySelector('.tab-content div#console').setAttribute('class', 'tab-pane fade show active');
+      document.querySelector('.tab-content div#chart').setAttribute('class', 'tab-pane fade');
     }
   }
 
@@ -41,36 +160,22 @@ function Build_strategy() {
       <nav id="sidebar">
         <div className="p-4 pt-5">
           {/* <a href="#" className="img logo rounded-circle mb-5" style={{backgroundImage: 'url(./assets/img/logo.jpg)'}}>ALGO LOGO</a> */}
-          <a href="#" className="img logo rounded-circle mb-5" >ALGO LOGO</a>
+          <a href="#" className="img logo rounded-circle mb-5 text-center" ><img src={graph_logo} height="60%" /></a>
           <ul className="list-unstyled components mb-5">
             <li>
-              <a href="#">Strategies</a>
-              {/* <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" className="dropdown-toggle">Strategies</a>
-              <ul className="collapse list-unstyled" id="homeSubmenu">
-                <li>
-                    <a href="#">Home 1</a>
-                </li>
-                <li>
-                    <a href="#">Home 2</a>
-                </li>
-                <li>
-                    <a href="#">Home 3</a>
-                </li>
-              </ul> */}
+              <a href="#"><i className="bi bi-boxes"></i> &nbsp;Strategies</a>
             </li>
             <li className="active">
-                <a href="">Build Strategy</a>
+                <a href=""><i className="bi bi-braces"></i> &nbsp;Build Strategy</a>
             </li>
             <li>
-              <a href="#">My Trading</a>
+              <a href="#"><i className="bi bi-currency-exchange"></i> &nbsp;My Trading</a>
             </li>
           </ul>
 
-          <div className="footer">
+          <div className="footer text-center">
             <p>
-              {/* <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --> */}
-              Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i className="icon-heart" aria-hidden="true"></i> by <a href="#" target="_blank">algo@algo.com</a>
-              {/* <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --> */}
+              Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved <i className="icon-heart" aria-hidden="true"></i> by <a href="#" target="_blank" >algo@trade.com</a>
             </p>
           </div>
 
@@ -85,7 +190,7 @@ function Build_strategy() {
             <button type="button" id="sidebarCollapse" className="btn btn-sm btn-primary">
               <i className="fa fa-bars"></i>
             </button>
-            <h4 className="ml-2">Build Strategy</h4>
+            <h4 className="ml-2" style={{marginTop:"7px"}}>Build Strategy</h4>
             <button className="btn btn-dark d-inline-block d-lg-none ml-auto" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <i className="fa fa-bars"></i>
             </button>
@@ -94,35 +199,39 @@ function Build_strategy() {
               <ul className="nav navbar-nav ml-auto">
                 <li className="nav-item active">
                     {/* <a href="#" className="img logo rounded-circle" style={{backgroundImage: 'url(./assets/img/logo.jpg)'}}></a> */}
-                    <a className="nav-link" href="#">Alexandr</a>
+                    <a className="nav-link" href="">Hi, {userName} &nbsp;&nbsp;&nbsp;<span onClick={logging_out}><i className="bi bi-box-arrow-right"></i></span></a>
                 </li>
-                {/* <li className="nav-item">
-                    <a className="nav-link" href="#">About</a>
-                </li>
-                <li className="nav-item">
-                    <a className="nav-link" href="#">Portfolio</a>
-                </li>
-                <li className="nav-item">
-                    <a className="nav-link" href="#">Contact</a>
-                </li> */}
               </ul>
             </div>
           </div>
         </nav>
           
-        <div className="mt-4 p-1" style={{textAlign:'left'}}>
-          <span className="btn btn-sm btn-light mb-1 p-0 ml-0" style={{margin:"0px 0px", cursor:"pointer"}} onClick={()=>{setOpenModal(true)}}><b><i><span name="shownName" id="shown-name">{shownName}</span></i></b> script</span>
+        <div className="mt-2 p-1" style={{textAlign:'left'}}>
           
           <div>
             <CodePane 
               setResultOfBackTest={setResultOfBackTest} 
-              setShownName = {showEditPencil}
+              shownName = {shownName}
+              setShownName = {setShownName}
+              filename = {filename}
+              setFilename = {setFilename}
               openModal = {openModal}
               setOpenModal = {setOpenModal}
               loading = {loading}
               setLoading = {setLoading}
               setLogs = {setLogs}
               setCreatedImg64 = {setCreatedImg64}
+              setOpenModal = {setOpenModal}
+              fileid = {fileid}
+              setFileid = {setFileid}
+              filenames = {filenames}
+              setFilenames = {setFilenames}
+              setOriginFileName = {setOriginFileName}
+              originFileName = {originFileName}
+              scripts = {scripts}
+              setScripts = {setScripts}
+              hintname = {hintname}
+              setHintname = {setHintname}
             />
           </div>
           <div className="sweet-loading text-center">
@@ -130,15 +239,15 @@ function Build_strategy() {
           </div>
         </div>
                 
-        <div className="mt-4 p-1">
-          <p className="test-result ml-4 mb-1" style={{textAlign:"left"}}><b>BackTest Result</b></p>
+        <div className="mt-1 p-1">
+          {/* <p className="test-result ml-4 mb-1" style={{textAlign:"left"}}><b>BackTest Result</b></p> */}
 
           <ul className="nav nav-tabs" id="tabTestResult" role="tablist">
             <li className="nav-item">
               <a className="nav-link active" id="chart-tab" data-toggle="tab" href="#chart" role="tab" aria-controls="chart" aria-selected="true">Chart</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" id="console-tab" data-toggle="tab" href="#console" role="tab" aria-controls="console" aria-selected="false">Console</a>
+              <a className="nav-link" id="console-tab" data-toggle="tab" href="#console" role="tab" aria-controls="console" aria-selected="false">Log</a>
             </li>
           </ul>
 
@@ -146,12 +255,12 @@ function Build_strategy() {
 
             <div className="tab-pane fade show active" id="chart" role="tabpanel" aria-labelledby="chart-tab">
               <div className="container text-center pt-2" style={{foreGroundColor:"lightgray"}}>
-                <img className="text-center p-5" src={`data:image/png;base64,${createdImg64}`} style={{width:'100%'}} alt="" />
+                <img className="text-center" src={`data:image/png;base64,${createdImg64}`} style={{width:'100%'}} alt="" />
               </div>
             </div>
             <div className="tab-pane fade" id="console" role="tabpanel" aria-labelledby="console-tab">
               <div className="container text-center pt-2">
-                <textarea readOnly={true} style={{width:"100%", height:"30vh", border:"none", backgroundColor:"lightgray", overflow:"scroll", fontSize:"80%"}} defaultValue={logs}></textarea>
+                <textarea id="logs" readOnly={true} defaultValue={logs}></textarea>
               </div>
             </div>
 

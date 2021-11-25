@@ -1,0 +1,11 @@
+{
+    "marketplace":"USDT",
+    "tokenlist":[{"token":"SOL","min":150,"max":280},{"token":"ETH","min":3800,"max":4700}],
+    "apiKey":"iALoKUiAKslA8at6xlKkYTfHLrFGsB2TupQVPd1Rzn9HFdcfPOps0yM5iJurhl77",
+    "secret":"nIrwG5etQTlz2RgRhreXXl7oU7PlKT6yi3q0nrxaCst2gheidjPAcWibc5UkISMF",
+    "btc_sup":1,
+    "btc_res":30,
+    "buyamount":10,
+    "tp":3,
+    "sl":10
+  }

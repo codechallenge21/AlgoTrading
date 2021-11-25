@@ -10,8 +10,8 @@
     $data = json_decode(file_get_contents("php://input"));
 
     if ($data->type == 'stop_test') {
-        $command = escapeshellcmd('exit()');
-        $output = shell_exec($command);
+        // $command = escapeshellcmd('exit()');
+        // $output = shell_exec($command);
         
     }
 

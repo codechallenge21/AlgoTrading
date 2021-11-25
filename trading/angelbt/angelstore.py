@@ -37,7 +37,8 @@ class ANGELStore(with_metaclass(MetaSingleton, object)):
         (bt.TimeFrame.Minutes, 5): '5minute',
         (bt.TimeFrame.Minutes, 10): '10minute',
         (bt.TimeFrame.Minutes, 15): '15minute',
-        (bt.TimeFrame.Minutes, 60): '60minute',
+        (bt.TimeFrame.Minutes, 60): '1h',
+        (bt.TimeFrame.Minutes, 240): '4h',
         (bt.TimeFrame.Days, 1): 'day',
     }
 

@@ -11,15 +11,16 @@ from angelbt import ZerodhaFeed
 import importlib
 import sys
 backtest = True
-filename = 'savefig.png'
+filename = './images/savefig.png'
 strategyname = ''
 strategy = None
 
-if(len(sys.argv)>2):
+if(len(sys.argv)>1):
     strategyname = sys.argv[1]
-    if (sys.argv[2]=="live"):
+    if (len(sys.argv)>2 and sys.argv[2]=="live"):
         backtest = False
-    filename =sys.argv[3]
+    if (len(sys.argv)>3):
+        filename =sys.argv[3]
 StrategyStore = importlib.import_module("strategies."+strategyname,package='None')
 
 tradingsymbol = StrategyStore.tradingsymbol

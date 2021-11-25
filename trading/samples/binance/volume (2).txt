@@ -1,0 +1,12 @@
+
+btc_sup = 1
+btc_res = 10
+
+sma_1 = sma(volume, 20)
+
+close_4h = security(syminfo.tickerid, "240", close, lookahead=true)
+btc_val = security('BINANCE:BTCUSDT', timeframe.period, close )
+
+my_cond = crossover(volume, sma_1) and close_4h > sup and close_4h < res and btc_val < btc_res and btc_val > btc_sup
+
+

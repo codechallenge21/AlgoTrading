@@ -13,7 +13,9 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 ReactDOM.render(
     <React.StrictMode>
         <GlobalState>
-            <App />
+            <React.Suspense fallback={<div>Loading...</div>}>
+                <App />
+            </React.Suspense>   
         </GlobalState>
     </React.StrictMode>, 
     document.getElementById('root')
