@@ -1,0 +1,41 @@
+{"faqs":[
+    {"q":"What is Verox?",
+        "a":[
+            "Verox is a crypto and DeFi protocol for all financial needs in this ground-breaking ecosystem.",
+            "",
+            "The Verox project includes VeroxAI app and Verox DEX: ",
+            "",
+            "VeroxAI is an app created to give both new and professional crypto traders more insights about crypto and DeFi. This will in turn, save their time, efforts and allow them to make better decisions in the market. It is a personal advisor, product analyzer and financial content provider. Using AI and deep learning, we create a personalized match between the user and their financial needs in both crypto trading and yield farming. VeroxAI analyzes any chosen token and finds the best investments in crypto and yield farming in real time, by scanning markets and processing massive sets of data to locate the optimal trading/investment opportunities.",
+            "",
+            "Verox DEX is the world’s first AI-powered decentralized cryptocurrency and derivatives exchange with next generation AMM and orderbook."
+        ]
+    },
+    {"q":"Links for all exchanges",
+        "a":[
+            "You can buy Verox VRX on Uniswap, Bilaxy, Hotbit, Probit, Cointiger and Hoo exchanges.",
+            "",
+            "VRX contract address on Uniswap: 0x87DE305311D5788e8da38D19bb427645b09CB4e5.",
+            "",
+            "Links for all the exchanges:",
+            "https://www.veroxai.com/buy-vrx",
+            "https://www.gate.io/",
+            "",
+            "A step by step guide on how to buy VRX on Uniswap exchange:",
+            "https://www.youtube.com/watch?v=CEyAFziz7oc&t=1s"
+        ]
+    },
+    {"q":"Where can I read more about Verox?",
+        "a":[
+            "To learn more about Verox project, please visit: Veroxai.com",
+            "",
+            "or vrx.gitbook.io."
+        ]
+    },
+    {"q":"How can I contact you for business inquiries?",
+        "a":[
+            "For business inquiries and more, please contact us through our twitter account:",
+            "@Verox_AICrypto , or by email: team@veroxai.com."
+        ]
+    }
+]
+}

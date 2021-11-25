@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/static/css/main.4f58c819.chunk.css",
+    "main.js": "/static/js/main.1670ce6b.chunk.js",
+    "main.js.map": "/static/js/main.1670ce6b.chunk.js.map",
+    "runtime~main.js": "/static/js/runtime~main.0f3e81a9.js",
+    "runtime~main.js.map": "/static/js/runtime~main.0f3e81a9.js.map",
+    "static/css/2.a95e8035.chunk.css": "/static/css/2.a95e8035.chunk.css",
+    "static/js/2.6dac153e.chunk.js": "/static/js/2.6dac153e.chunk.js",
+    "static/js/2.6dac153e.chunk.js.map": "/static/js/2.6dac153e.chunk.js.map",
+    "index.html": "/index.html",
+    "precache-manifest.0a47ab99f915ed54db0814f8159b8e98.js": "/precache-manifest.0a47ab99f915ed54db0814f8159b8e98.js",
+    "service-worker.js": "/service-worker.js",
+    "static/css/2.a95e8035.chunk.css.map": "/static/css/2.a95e8035.chunk.css.map",
+    "static/css/main.4f58c819.chunk.css.map": "/static/css/main.4f58c819.chunk.css.map",
+    "static/media/bootstrap-icons.css": "/static/media/bootstrap-icons.a892cbb9.woff",
+    "static/media/chart.png": "/static/media/chart.bf8f4baf.png",
+    "static/media/hand icon.svg": "/static/media/hand icon.4a0ac855.svg",
+    "static/media/market trickks-01.svg": "/static/media/market trickks-01.b63a2e56.svg",
+    "static/media/prices.svg": "/static/media/prices.cff1ae14.svg",
+    "static/media/wallet.svg": "/static/media/wallet.09482fca.svg"
+  }
+}

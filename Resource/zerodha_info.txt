@@ -1,0 +1,13 @@
+id:saumya2427130164@gmail.com/R2166952r
+
+id:-IY4474
+pass:-Sunainailu143.
+key:-216695
+
+
+
+
+rsi(option price) > 60
+option price > vwap
+20sma(open interest)>open interest
+volume>20sma(volume)
